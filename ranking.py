@@ -9,46 +9,6 @@ from leagueClass import League
 from teamClass import Team
 from data import *
 
-def string2list(text: str):
-
-    """
-    Takes a string with spaces and returns a list of the different elements of this string.
-
-    :param text: a simple string of characters
-    :return: a list of the different elements
-
-    example:
-        >>> string2list("11  Reims  15  3  8  4  -5 17")
-        ['11', 'Reims', '15', '3', '8', '4', '5', '17']
-    """
-
-    # initializes the variables
-    alphabet = "1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZéìäê"
-    temp_string = ""
-    temp_list = list()
-
-    # separates the element
-    for character in text:
-        if character in alphabet:
-            temp_string += character
-        else:
-            if temp_string != "":
-                temp_list.append(temp_string)
-            temp_string = ""
-    temp_list.append(temp_string)
-
-    # if there is a compound word puts it in the same box
-    run = True
-    while run:
-        if not temp_list[2].isdigit():
-            tmp_ch = temp_list[2]
-            temp_list[1] += f" {tmp_ch}"
-            temp_list.pop(2)
-        else:
-            run = False
-
-    return temp_list
-
 def get_ranking_by_league(league: str):
 
     """
@@ -103,11 +63,23 @@ def get_ranking_by_league(league: str):
     source = requests.get(url).text
     page = BeautifulSoup(source, "lxml")
     data = list()
+    rank = 1
 
     # get the datas
-    for a in page.find_all("a", class_="standings__row-grid"):
-        temp_text = a.text.strip()
-        data.append(string2list(temp_text))
+    for team in page.find_all("a", class_="Standing_standings__rowGrid__45OOd"): # get each team
+        team_informations = [
+            rank, # get the rank
+            team.find("p", class_="title-7-medium Standing_standings__teamName__psv61").text.strip(), #g et the name of the team
+            team.find_all("div", class_="Standing_standings__cell__5Kd0W Standing_standings__cellTextDimmed__vpZYH")[0].text.strip(), # get the number of game played
+            team.find_all("div", class_="Standing_standings__cell__5Kd0W Standing_standings__cellLargeScreen__ttPap Standing_standings__cellTextDimmed__vpZYH")[0].text.strip(), # get the number of matchs won
+            team.find_all("div", class_="Standing_standings__cell__5Kd0W Standing_standings__cellLargeScreen__ttPap Standing_standings__cellTextDimmed__vpZYH")[1].text.strip(), # get the number of matchs drawed
+            team.find_all("div", class_="Standing_standings__cell__5Kd0W Standing_standings__cellLargeScreen__ttPap Standing_standings__cellTextDimmed__vpZYH")[2].text.strip(), # get the number of matchs lost
+            team.find_all("div", class_="Standing_standings__cell__5Kd0W Standing_standings__cellTextDimmed__vpZYH")[1].text.strip(), # get the goalaverage
+            team.find("span", class_="title-7-bold").text.strip() # get the number of points
+        ]
+
+        data.append(team_informations)
+        rank += 1
 
     # processes the data for better display
     result = League(league, list())
